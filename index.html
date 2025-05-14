@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Text, Image & Video Harm Detection</title>
+  <style>
+    body { font-family: Arial; padding: 40px; background-color: #f5f5f5; }
+    textarea, input, button { display: block; margin-top: 10px; }
+    textarea {
+      width: 100%; height: 120px; font-size: 16px;
+      padding: 10px; border-radius: 8px; border: 1px solid #ccc;
+    }
+    input[type="file"] { font-size: 16px; }
+    button {
+      padding: 10px 20px; font-size: 16px;
+      background-color: #008cff; color: white; border: none; border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover { background-color: #006ed3; }
+    .result { margin-top: 20px; font-size: 18px; color: #333; }
+  </style>
+</head>
+<body>
+
+  <h2>Harmful Content Detection (Text, Image & Video)</h2>
+
+  <!-- Text -->
+  <h3>Analyze Text</h3>
+  <textarea id="text-input" placeholder="Enter text to analyze..."></textarea>
+  <button onclick="analyzeText()">Analyze Text</button>
+  <div class="result" id="text-result"></div>
+
+  <!-- Image -->
+  <h3>Analyze Image</h3>
+  <input type="file" id="image-input" accept="image/*" />
+  <button onclick="analyzeImage()">Analyze Image</button>
+  <div class="result" id="image-result"></div>
+
+  <!-- Video -->
+  <h3>Analyze Video</h3>
+  <input type="file" id="video-input" accept="video/*" />
+  <button onclick="analyzeVideo()">Analyze Video</button>
+  <div class="result" id="video-result"></div>
+
+  <script>
+    async function analyzeText() {
+      const text = document.getElementById("text-input").value;
+      const response = await fetch("/analyze/text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: text })
+      });
+      const result = await response.json();
+      document.getElementById("text-result").innerText =
+        `Label: ${result[0].label}, Score: ${(result[0].score * 100).toFixed(2)}%`;
+    }
+
+    async function analyzeImage() {
+      const file = document.getElementById("image-input").files[0];
+      if (!file) return alert("Please select an image");
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const response = await fetch("/analyze/image", {
+        method: "POST",
+        body: formData
+      });
+      const result = await response.json();
+      document.getElementById("image-result").innerText =
+        `Label: ${result[0].label}, Score: ${(result[0].score * 100).toFixed(2)}%`;
+    }
+
+    async function analyzeVideo() {
+      const file = document.getElementById("video-input").files[0];
+      if (!file) return alert("Please select a video");
+      const formData = new FormData();
+      formData.append("video", file);
+
+      const response = await fetch("/analyze/video", {
+        method: "POST",
+        body: formData
+      });
+      const result = await response.json();
+      document.getElementById("video-result").innerText =
+        `Harmful Frames: ${result.harmful_frames} / ${result.total_frames}
+        (${(result.harmful_ratio * 100).toFixed(2)}%) - Time: ${result.processing_time}s`;
+    }
+  </script>
+
+</body>
+</html>
